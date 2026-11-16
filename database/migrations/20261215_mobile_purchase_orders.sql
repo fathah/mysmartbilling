@@ -1,0 +1,36 @@
+CREATE TABLE IF NOT EXISTS mobile_purchase_orders (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  supplier_id BIGINT UNSIGNED NOT NULL,
+  order_number VARCHAR(32) NOT NULL,
+  order_date DATE NOT NULL,
+  expected_date DATE NULL,
+  status ENUM('Draft','Ordered','Cancelled') NOT NULL DEFAULT 'Draft',
+  total_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  notes VARCHAR(1000) NULL,
+  created_by BIGINT UNSIGNED NOT NULL,
+  updated_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_mobile_purchase_order_number(company_id,order_number),
+  INDEX idx_mobile_purchase_orders_company_date(company_id,order_date),
+  INDEX idx_mobile_purchase_orders_supplier(supplier_id),
+  CONSTRAINT fk_mobile_purchase_orders_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mobile_purchase_orders_supplier FOREIGN KEY(supplier_id) REFERENCES mobile_suppliers(id),
+  CONSTRAINT fk_mobile_purchase_orders_created_by FOREIGN KEY(created_by) REFERENCES users(id),
+  CONSTRAINT fk_mobile_purchase_orders_updated_by FOREIGN KEY(updated_by) REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE TABLE IF NOT EXISTS mobile_purchase_order_lines (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id BIGINT UNSIGNED NOT NULL,
+  company_id BIGINT UNSIGNED NOT NULL,
+  item_name VARCHAR(160) NOT NULL,
+  model VARCHAR(160) NULL,
+  model_year SMALLINT UNSIGNED NULL,
+  quantity INT UNSIGNED NOT NULL,
+  unit_amount DECIMAL(12,2) NOT NULL,
+  line_total DECIMAL(12,2) NOT NULL,
+  INDEX idx_mobile_po_lines_order(order_id,company_id),
+  CONSTRAINT fk_mobile_po_lines_order FOREIGN KEY(order_id) REFERENCES mobile_purchase_orders(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mobile_po_lines_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+);

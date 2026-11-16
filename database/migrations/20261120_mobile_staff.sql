@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS mobile_staff (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(160) NOT NULL,
+  nationality VARCHAR(100) NOT NULL,
+  identity_number VARCHAR(100) NOT NULL,
+  identity_expiry DATE NOT NULL,
+  labour_id VARCHAR(100) NOT NULL,
+  labour_expiry DATE NOT NULL,
+  mobile VARCHAR(60) NOT NULL,
+  salary DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_mobile_staff_company_name(company_id,name),
+  CONSTRAINT fk_mobile_staff_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+);

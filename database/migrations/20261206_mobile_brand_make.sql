@@ -1,0 +1,2 @@
+ALTER TABLE mobile_inventory ADD COLUMN brand VARCHAR(100) NULL AFTER model;
+ALTER TABLE mobile_sales ADD COLUMN brand VARCHAR(100) NULL AFTER model;

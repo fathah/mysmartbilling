@@ -1,0 +1,177 @@
+-- Grocery retail workspace tables (all records are company-scoped).
+USE myshop;
+
+CREATE TABLE IF NOT EXISTS grocery_products (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  product_code VARCHAR(40) NOT NULL,
+  barcode VARCHAR(100) NULL,
+  product_name VARCHAR(180) NOT NULL,
+  category VARCHAR(100) NOT NULL DEFAULT 'General',
+  brand VARCHAR(120) NULL,
+  unit_name VARCHAR(40) NOT NULL DEFAULT 'Piece',
+  description VARCHAR(500) NULL,
+  cost_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  sale_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  vat_rate DECIMAL(5,2) NOT NULL DEFAULT 5.00,
+  current_stock DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  minimum_stock DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  expiry_date DATE NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_grocery_company_product_code(company_id,product_code),
+  UNIQUE KEY uq_grocery_company_barcode(company_id,barcode),
+  INDEX idx_grocery_products_company_name(company_id,product_name),
+  INDEX idx_grocery_products_stock(company_id,current_stock),
+  INDEX idx_grocery_products_expiry(company_id,expiry_date),
+  CONSTRAINT fk_grocery_products_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_products_user FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grocery_customers (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  customer_name VARCHAR(180) NOT NULL,
+  mobile VARCHAR(30) NULL,
+  email VARCHAR(180) NULL,
+  trn VARCHAR(30) NULL,
+  address VARCHAR(500) NULL,
+  notes VARCHAR(500) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_grocery_customers_name(company_id,customer_name),
+  INDEX idx_grocery_customers_mobile(company_id,mobile),
+  CONSTRAINT fk_grocery_customers_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grocery_suppliers (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  supplier_name VARCHAR(180) NOT NULL,
+  contact_person VARCHAR(160) NULL,
+  mobile VARCHAR(30) NULL,
+  email VARCHAR(180) NULL,
+  trn VARCHAR(30) NULL,
+  address VARCHAR(500) NULL,
+  notes VARCHAR(500) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_grocery_suppliers_name(company_id,supplier_name),
+  INDEX idx_grocery_suppliers_mobile(company_id,mobile),
+  CONSTRAINT fk_grocery_suppliers_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grocery_sales (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  bill_number VARCHAR(40) NOT NULL,
+  sale_date DATE NOT NULL,
+  customer_id BIGINT UNSIGNED NULL,
+  subtotal_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  vat_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  total_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  amount_paid DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  balance_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  payment_mode ENUM('Cash','Credit') NOT NULL DEFAULT 'Cash',
+  payment_method VARCHAR(30) NULL,
+  payment_reference VARCHAR(160) NULL,
+  notes VARCHAR(500) NULL,
+  created_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_grocery_sales_bill(company_id,bill_number),
+  INDEX idx_grocery_sales_company_date(company_id,sale_date),
+  INDEX idx_grocery_sales_customer(company_id,customer_id),
+  CONSTRAINT fk_grocery_sales_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_sales_customer FOREIGN KEY(customer_id) REFERENCES grocery_customers(id) ON DELETE SET NULL,
+  CONSTRAINT fk_grocery_sales_user FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grocery_sale_items (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  sale_id BIGINT UNSIGNED NOT NULL,
+  product_id BIGINT UNSIGNED NOT NULL,
+  product_name VARCHAR(180) NOT NULL,
+  barcode VARCHAR(100) NULL,
+  unit_name VARCHAR(40) NOT NULL,
+  quantity DECIMAL(12,3) NOT NULL,
+  unit_price DECIMAL(12,2) NOT NULL,
+  unit_cost DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  vat_rate DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  vat_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  line_total DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  INDEX idx_grocery_sale_items_sale(company_id,sale_id),
+  INDEX idx_grocery_sale_items_product(company_id,product_id),
+  CONSTRAINT fk_grocery_sale_items_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_sale_items_sale FOREIGN KEY(sale_id) REFERENCES grocery_sales(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_sale_items_product FOREIGN KEY(product_id) REFERENCES grocery_products(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grocery_purchases (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  purchase_number VARCHAR(40) NOT NULL,
+  supplier_id BIGINT UNSIGNED NOT NULL,
+  supplier_invoice_number VARCHAR(100) NOT NULL,
+  purchase_date DATE NOT NULL,
+  due_date DATE NULL,
+  subtotal_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  vat_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  total_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  amount_paid DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  balance_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  payment_mode ENUM('Cash','Credit') NOT NULL DEFAULT 'Cash',
+  payment_method VARCHAR(30) NULL,
+  payment_reference VARCHAR(160) NULL,
+  notes VARCHAR(500) NULL,
+  created_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_grocery_purchases_number(company_id,purchase_number),
+  INDEX idx_grocery_purchases_company_date(company_id,purchase_date),
+  INDEX idx_grocery_purchases_supplier(company_id,supplier_id),
+  CONSTRAINT fk_grocery_purchases_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_purchases_supplier FOREIGN KEY(supplier_id) REFERENCES grocery_suppliers(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_grocery_purchases_user FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grocery_purchase_items (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  purchase_id BIGINT UNSIGNED NOT NULL,
+  product_id BIGINT UNSIGNED NOT NULL,
+  product_name VARCHAR(180) NOT NULL,
+  barcode VARCHAR(100) NULL,
+  unit_name VARCHAR(40) NOT NULL,
+  quantity DECIMAL(12,3) NOT NULL,
+  unit_cost DECIMAL(12,2) NOT NULL,
+  vat_rate DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  vat_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  line_total DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  expiry_date DATE NULL,
+  INDEX idx_grocery_purchase_items_purchase(company_id,purchase_id),
+  INDEX idx_grocery_purchase_items_product(company_id,product_id),
+  CONSTRAINT fk_grocery_purchase_items_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_purchase_items_purchase FOREIGN KEY(purchase_id) REFERENCES grocery_purchases(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_purchase_items_product FOREIGN KEY(product_id) REFERENCES grocery_products(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grocery_expenses (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  expense_date DATE NOT NULL,
+  expense_name VARCHAR(180) NOT NULL,
+  description VARCHAR(500) NULL,
+  trn VARCHAR(30) NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  payment_method VARCHAR(30) NOT NULL DEFAULT 'Cash',
+  reference VARCHAR(160) NULL,
+  created_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_grocery_expenses_company_date(company_id,expense_date),
+  CONSTRAINT fk_grocery_expenses_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_grocery_expenses_user FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

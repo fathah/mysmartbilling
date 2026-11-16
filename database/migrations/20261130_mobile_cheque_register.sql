@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS mobile_cheques (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  cheque_direction ENUM('Incoming','Outgoing') NOT NULL,
+  cheque_number VARCHAR(100) NOT NULL,
+  cheque_holder VARCHAR(160) NOT NULL,
+  bank_name VARCHAR(120) NOT NULL,
+  payee_name VARCHAR(160) NOT NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  cheque_date DATE NOT NULL,
+  purpose ENUM('Rent','Purchase','Supplier','Expense','Other') NOT NULL DEFAULT 'Other',
+  notes VARCHAR(1000) NULL,
+  status ENUM('Pending','Cleared','Returned') NOT NULL DEFAULT 'Pending',
+  status_date DATE NULL,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_mobile_cheque_number(company_id,cheque_direction,bank_name,cheque_number),
+  INDEX idx_mobile_cheque_company_date(company_id,cheque_date),
+  INDEX idx_mobile_cheque_company_status(company_id,status),
+  CONSTRAINT fk_mobile_cheque_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mobile_cheque_user FOREIGN KEY(created_by) REFERENCES users(id)
+);

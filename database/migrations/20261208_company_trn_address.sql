@@ -1,0 +1,1 @@
+ALTER TABLE companies ADD COLUMN trn VARCHAR(80) NULL AFTER contact_number, ADD COLUMN address VARCHAR(500) NULL AFTER trn;

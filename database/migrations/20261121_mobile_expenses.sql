@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS mobile_expenses (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  expense_date DATE NOT NULL,
+  name VARCHAR(160) NOT NULL,
+  description VARCHAR(500) NOT NULL,
+  trn VARCHAR(80) NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_mobile_expenses_company_date(company_id,expense_date),
+  CONSTRAINT fk_mobile_expenses_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+);

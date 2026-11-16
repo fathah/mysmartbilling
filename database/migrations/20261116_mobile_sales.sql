@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS mobile_sales (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  inventory_id BIGINT UNSIGNED NOT NULL,
+  bill_number VARCHAR(40) NOT NULL,
+  sale_date DATE NOT NULL,
+  inventory_type ENUM('new','used') NOT NULL,
+  item_name VARCHAR(160) NOT NULL,
+  model VARCHAR(160) NOT NULL,
+  model_year SMALLINT UNSIGNED NOT NULL,
+  imei_number VARCHAR(100) NOT NULL,
+  sale_amount DECIMAL(12,2) NOT NULL,
+  payment_mode ENUM('Cash','Credit') NOT NULL,
+  payment_method ENUM('Cash','Card','Bank') NULL,
+  payment_reference VARCHAR(160) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_mobile_sales_company_bill(company_id,bill_number),
+  INDEX idx_mobile_sales_company_date(company_id,sale_date),
+  CONSTRAINT fk_mobile_sales_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mobile_sales_inventory FOREIGN KEY(inventory_id) REFERENCES mobile_inventory(id)
+);

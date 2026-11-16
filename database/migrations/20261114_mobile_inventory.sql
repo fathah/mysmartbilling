@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS mobile_inventory (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  company_id BIGINT UNSIGNED NOT NULL,
+  inventory_type ENUM('new','used') NOT NULL,
+  item_name VARCHAR(160) NOT NULL,
+  model VARCHAR(160) NOT NULL,
+  model_year SMALLINT UNSIGNED NOT NULL,
+  imei_number VARCHAR(100) NOT NULL,
+  warranty VARCHAR(120) NULL,
+  extra_warranty VARCHAR(120) NULL,
+  purchase_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  sale_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  profit_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  seller_name VARCHAR(160) NULL,
+  seller_nationality VARCHAR(100) NULL,
+  seller_identity_number VARCHAR(100) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_mobile_inventory_company_type(company_id,inventory_type),
+  INDEX idx_mobile_inventory_imei(company_id,imei_number),
+  CONSTRAINT fk_mobile_inventory_company FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+);

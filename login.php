@@ -1,0 +1,17 @@
+<?php
+require __DIR__.'/auth.php';
+require __DIR__.'/database.php';
+if (!empty($_SESSION['user'])) { header('Location: index.php'); exit; }
+$error='';
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+    $username=trim($_POST['username']??''); $password=$_POST['password']??'';
+    $stmt=db()->prepare('SELECT u.id,u.company_id,u.name,u.username,u.password_hash,u.role,u.active,c.status company_status,c.demo_expires_at FROM users u JOIN companies c ON c.id=u.company_id WHERE u.username=?');
+    $stmt->execute([$username]); $user=$stmt->fetch();
+    $demoValid=!$user||$user['role']==='super_admin'||empty($user['demo_expires_at'])||(new DateTimeImmutable('today',new DateTimeZone('Asia/Dubai')))<new DateTimeImmutable($user['demo_expires_at'],new DateTimeZone('Asia/Dubai'));
+    if ($user && $demoValid && (int)$user['active']===1 && password_verify($password,$user['password_hash']) && ($user['company_status']==='approved'||$user['role']==='super_admin')) {
+        session_regenerate_id(true); unset($user['password_hash'],$user['company_status'],$user['active']); $_SESSION['user']=$user; refresh_user_context(db()); header('Location: index.php'); exit;
+    }
+    $demoExpired=$user&&!empty($user['demo_expires_at'])&&$user['role']!=='super_admin'&&(new DateTimeImmutable('today',new DateTimeZone('Asia/Dubai')))>=new DateTimeImmutable($user['demo_expires_at'],new DateTimeZone('Asia/Dubai'));$error=$demoExpired?'The demo period has expired. Contact the Super Admin to continue.':($user&&password_verify($password,$user['password_hash'])?'Your company request is awaiting approval or the account is disabled.':'That username or password is incorrect.');
+}
+?>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in · SmartBill</title><link rel="stylesheet" href="assets/style.css?v=20261113-100"></head><body class="login-page"><main class="login-shell"><section class="login-art"><div class="brand smartbill-login-brand"><span class="smartbilling-login-caption">SmartBilling<span class="brand-light">Business Workspace</span></span></div><div class="login-copy"><span class="eyebrow">ONE ACCOUNT · MANY BUSINESSES</span><h1>Space to<br><em>manage</em> better.</h1><p class="login-tagline">Manage your business in one secure workspace.</p></div><div class="login-art-foot">SmartBilling © All rights reserved.</div></section><section class="login-form-wrap"><form class="login-form" method="post"><div class="mobile-brand brand smartbill-login-brand"><span class="smartbill-login-logo"><img src="assets/smartbill-logo.png?v=20261113-2" alt="SmartBill logo"></span><span>SmartBilling<span class="brand-light">Business Workspace</span></span></div><span class="eyebrow">WELCOME BACK</span><h2>Sign in to your workspace</h2><p class="muted">Enter your account credentials to continue.</p><?php if($error):?><div class="alert"><?=htmlspecialchars($error)?></div><?php endif;?><label>Username<input name="username" required autocomplete="username" placeholder="Your username"></label><label>Password<input type="password" name="password" required autocomplete="current-password" placeholder="Your password"></label><button class="button button-dark button-full">Sign in <span>→</span></button><div class="login-register"><span>New company?</span><a href="register.php"><span>Register your business</span><b>→</b></a></div></form></section></main></body></html>
