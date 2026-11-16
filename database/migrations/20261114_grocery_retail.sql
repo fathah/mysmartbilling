@@ -1,5 +1,4 @@
 -- Grocery retail workspace tables (all records are company-scoped).
-USE myshop;
 
 CREATE TABLE IF NOT EXISTS grocery_products (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

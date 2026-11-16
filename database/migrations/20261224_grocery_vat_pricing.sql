@@ -1,4 +1,3 @@
-USE myshop;
 
 ALTER TABLE grocery_sales
   ADD COLUMN vat_mode ENUM('Inclusive','Exclusive') NULL AFTER vat_amount;

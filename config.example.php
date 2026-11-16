@@ -5,4 +5,5 @@ return [
     'username' => 'root',
     'password' => '',
     'charset' => 'utf8mb4',
+    'migration_password' => '',
 ];
